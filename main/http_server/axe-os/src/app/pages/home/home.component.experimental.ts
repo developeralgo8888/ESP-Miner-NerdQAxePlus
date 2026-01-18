@@ -126,6 +126,8 @@ export class HomeExperimentalComponent implements AfterViewChecked, OnInit, OnDe
   private hashrateYAxisMaxTicks: number = 5;
   private hashrateYAxisMinStepThs: number = 0.005;
   private tempYAxisMinStepC: number = 2;
+  // Chunk size for the history drainer
+  private chunkSizeDrainer: number = 100;
   // --- Rendering smoothing (visual only)
   // Applies to the 1min hashrate dataset. This does not modify data, only the curve rendering.
   // Rule: high point density => higher tension, low density => lower tension.
@@ -249,10 +251,11 @@ export class HomeExperimentalComponent implements AfterViewChecked, OnInit, OnDe
   public hasChipTemps: boolean = false;
   public viewMode: 'gauge' | 'bars' = 'bars'; // default to bars
 
-  private localStorageKey = 'chartData';
-  private timestampKey = 'lastTimestamp'; // Key to store lastTimestamp
-  private tempViewKey = 'tempViewMode';
-  private legendVisibilityKey = 'chartLegendVisibility';
+  private localStorageKey = 'chartData_exp';
+  private timestampKey = 'lastTimestamp_exp'; // Key to store lastTimestamp
+  private tempViewKey = 'tempViewMode_exp';
+  private legendVisibilityKey = 'chartLegendVisibility_exp';
+  private minHistoryTsKey = 'minHistoryTimestampMs_exp';
 
   public isDualPool: boolean = false;
 
@@ -270,7 +273,6 @@ export class HomeExperimentalComponent implements AfterViewChecked, OnInit, OnDe
   private enableHashrateSpikeGuard: boolean = true;
   public debugSpikeGuard: boolean = false;
   public debugPillsLayout: boolean = false;
-  private minHistoryTsKey = '__nerdCharts_minHistoryTimestampMs';
 
   // Adaptive axis padding so lines don't stick to frame; tweak here.
   private axisPadCfg = {
@@ -575,7 +577,7 @@ export class HomeExperimentalComponent implements AfterViewChecked, OnInit, OnDe
         // Cap the startTimestamp to be at most one hour ago
         let startTimestamp = storedLastTimestamp ? Math.max(storedLastTimestamp + 1, oneHourAgo) : oneHourAgo;
 
-        return this.systemService.getInfo(startTimestamp).pipe(
+        return this.systemService.getInfo(startTimestamp, this.chunkSizeDrainer).pipe(
           catchError(err => {
             console.error('[HomeComponent] getInfo polling error', err);
             // Skip this tick, keep last good value and continue polling.
@@ -2179,7 +2181,7 @@ private updateTempScaleFromLatest(): void {
     }
 
     const fetchNext = (startTs: number) => {
-      this.historyDrainSub = this.systemService.getInfo(startTs).pipe(take(1)).subscribe({
+      this.historyDrainSub = this.systemService.getInfo(startTs, this.chunkSizeDrainer).pipe(take(1)).subscribe({
         next: (info) => {
           const h = info?.history;
           if (!h) {
