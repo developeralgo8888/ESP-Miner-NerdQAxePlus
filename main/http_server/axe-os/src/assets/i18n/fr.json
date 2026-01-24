@@ -36,7 +36,7 @@
   "HOME": {
     "HASH_RATE": "Taux de Hachage",
     "HASH_RATE_TOOLTIP": "Taux de hachage rapporté par les ASICs.",
-    "HASH_RATE_CHART": "Graphique du Taux de Hachage",
+    "HASH_RATE_CHART": "Nerd* Graphique",
     "HASHRATE_ESTIMATED": "Taux de hachage estimé par les parts trouvées.",
     "SHARES": "Parts",
     "POWER": "Puissance",
@@ -60,15 +60,17 @@
     "IDLE": "Inactif",
     "PRIMARY_POOL": "Pool Primaire",
     "FALLBACK_POOL": "Pool de Secours",
-    "HASHRATE_1M": "Hashrate (1 min)",
-    "HASHRATE_10M": "Hashrate (10 min)",
-    "HASHRATE_1H": "Hashrate (1 h)",
-    "HASHRATE_1D": "Hashrate (1 j)",
+    "HASHRATE_1M": "Hashrate  (1 min)",
+    "HASHRATE_10M": " (10 min)",
+    "HASHRATE_1H": " (1 heure)",
+    "HASHRATE_1D": " (1 jour)",
     "SHARE_TOO_SMALL": "Pourcentage pour ce pool trop faible!"
   },
   "PERFORMANCE": {
     "TITLE": "Performance",
+    "TITLE_POWER_USAGE": "Consommation électrique",
     "POWER": "Puissance",
+    "INPUT_CURRENT": "Courant d'entrée",
     "INPUT_VOLTAGE": "Tension d'Entrée",
     "ASIC_VOLTAGE": "Tension ASIC",
     "ASIC_VOLTAGE_MEASURED": "Tension ASIC Mesurée",
@@ -76,6 +78,8 @@
     "TITLE_HEAT": "Chaleur",
     "ASIC_TEMP": "Temp ASIC",
     "VR_TEMP": "Temp VR",
+    "ASIC_TEMP_LEGEND": "ASIC",
+    "VR_TEMP_LEGEND": "VReg.",
     "FAN_SPEED": "Vitesse Ventilateur",
     "FAN_RPM": "RPM Ventilateur",
     "ASIC_FREQUENCY": "Fréquence ASIC",
@@ -135,7 +139,8 @@
     "POOL_MODE_DUAL": "Pool double",
     "POOL_BALANCE": "Équilibrage du pool",
     "POOL_BALANCE_HINT": "Répartit les tâches entre le pool primaire et le pool secondaire, par ex. 70/30.",
-    "STRATUM": "Paramètres Stratum"
+    "STRATUM": "Paramètres Stratum",
+    "SWAP_POOLS": "Permuter les pools"
   },
   "SYSTEM": {
     "TITLE": "Informations Système",
@@ -194,7 +199,11 @@
     "RESET_SDIO": "Redémarrage SDIO",
     "RESET_NOT_SPECIFIED": "Non spécifié",
     "ABOUT_NERDQX": " projet a été développé par une équipe internationale de passionnés et publié en tant que matériel libre. NerdQX fait partie de l'initiative <strong>«ORIGINAL»</strong>, qui permet aux utilisateurs de vérifier si leur NerdQX est un produit original. Pour en savoir plus, cliquez",
-    "ABOUT_NERDQX_ORIGINAL": " <u>ici</u>"
+    "ABOUT_NERDQX_ORIGINAL": " <u>ici</u>",
+    "SHUTDOWN": "Arrêt",
+    "SHUTDOWN_SUCCESS": "Le système est en cours d’arrêt",
+    "SHUTDOWN_FAILED": "Échec de l’arrêt du système",
+    "LOGS_ALREADY_OPEN_OTHER_TAB": "Les journaux sont déjà ouverts dans un autre onglet."
   },
   "SWARM": {
     "TITLE": "Gestion d'Essaim",
@@ -261,6 +270,11 @@
     "SETTINGS_SAVE_FAILED": "Impossible de sauvegarder les paramètres d'alerte.",
     "TEST_ALERT_SENT": "Alerte test envoyée sur Discord.",
     "TEST_ALERT_FAILED": "Échec d'envoi de l'alerte test."
+  },
+  "DISPLAY": {
+    "TITLE": "Affichage",
+    "BLOCK_FOUND_SCREEN": "Afficher l'écran « Bloc trouvé »",
+    "BLOCK_FOUND_SCREEN_DESC": "Affiche une notification sur l'écran du mineur lorsqu'un bloc est trouvé."
   },
   "ERRORS": {
     "NETWORK_ERROR": "Erreur réseau survenue",
@@ -369,7 +383,8 @@
     "SETTINGS": "Paramètres de Minage",
     "STRATUM_DIFFICULTY": "Difficulté Stratum Suggérée",
     "STRATUM_DIFFICULTY_HELP": "Difficulté Stratum initiale suggérée",
-    "ENABLE_EXTRANONCE": "Activer Extranonce Subscribe"
+    "ENABLE_EXTRANONCE": "Activer Extranonce Subscribe",
+    "STRATUM_TLS": "Connexion chiffrée (TLS)"
   },
   "FAN": {
     "TITLE": "Contrôleur de Ventilateur",
@@ -402,14 +417,16 @@
     "TITLE": "Alertes Discord",
     "ALERTS": "Alertes Discord",
     "WEBHOOK": "Webhook Discord",
-    "WEBHOOK_URL": "URL Webhook",
-    "WEBHOOK_HELP": "Webhook de l'intégration de votre canal Discord",
+    "WEBHOOK_URL": "URL du webhook",
+    "WEBHOOK_HELP": "Webhook issu de l’intégration du canal Discord",
     "CONFIGURE_DESCRIPTION": "Configurez les alertes Discord que vous souhaitez recevoir. Le webhook est utilisé pour tous les sujets sélectionnés.",
-    "MINER_WATCHDOG": "Surveillance du mineur déclenchée",
-    "MINER_WATCHDOG_DESC": "se déclenche si l'appareil redémarre après avoir échoué à soumettre une part pendant 1 heure",
+    "MINER_WATCHDOG": "Watchdog du mineur déclenché",
+    "MINER_WATCHDOG_DESC": "se déclenche lorsque l’appareil redémarre après n’avoir envoyé aucun share pendant 1 heure",
     "BLOCK_FOUND": "Bloc trouvé",
-    "BLOCK_FOUND_DESC": "se déclenche quand votre mineur trouve un bloc",
-    "TEST": "Test"
+    "BLOCK_FOUND_DESC": "se déclenche lorsque votre mineur trouve un bloc",
+    "TEST": "Test",
+    "BEST_DIFF_FOUND": "Meilleure difficulté trouvée",
+    "BEST_DIFF_FOUND_DESC": "se déclenche lorsque l’appareil trouve une nouvelle meilleure difficulté"
   },
   "LANGUAGE": {
     "TITLE": "Langue / Language",

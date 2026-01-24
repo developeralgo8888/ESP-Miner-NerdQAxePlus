@@ -13,7 +13,10 @@ export interface ISystemInfo {
     voltage: number,
     maxVoltage: number,
     minVoltage: number,
-    current: number,
+    current: number,  // mA (raw)
+    currentA?: number;
+    minCurrentA?: number;
+    maxCurrentA?: number;
     temp: number,
     vrTemp: number,
     hashRateTimestamp: number,
@@ -45,10 +48,12 @@ export interface ISystemInfo {
     stratumPort: number,
     stratumUser: string,
     stratumEnonceSubscribe: number,
+    stratumTLS: number,
     fallbackStratumURL: string,
     fallbackStratumPort: number,
     fallbackStratumUser: string,
     fallbackStratumEnonceSubscribe: number,
+    fallbackStratumTLS: number,
     stratumDifficulty: number,
     poolDifficulty: number,
     frequency: number,

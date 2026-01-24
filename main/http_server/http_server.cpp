@@ -17,6 +17,7 @@
 #include "handler_system.h"
 #include "handler_ota.h"
 #include "handler_restart.h"
+#include "handler_shutdown.h"
 #include "handler_file.h"
 #include "handler_alert.h"
 #include "handler_otp.h"
@@ -102,13 +103,18 @@ static void http_close_cb(void* hd, int sockfd)
 {
     // If our websocket socket is being closed, reset logging
     if (sockfd == websocket_fd) {
-        ESP_LOGI(TAG, "Socket %d closed, resetting websocket logging", sockfd);
+        ESP_LOGI(TAG, "resetting websocket %d", sockfd);
         websocket_reset();
-        return;
     }
+    ESP_LOGD(TAG, "http_close_cb: %d", sockfd);
     if (sockfd >= 0) {
         (void)close(sockfd);
     }
+}
+
+static esp_err_t http_open_cb(void* hd, int sockfd) {
+    ESP_LOGD(TAG, "http_open_cb: %d", sockfd);
+    return ESP_OK;
 }
 
 esp_err_t start_rest_server(void * pvParameters)
@@ -146,6 +152,7 @@ esp_err_t start_rest_server(void * pvParameters)
     config.recv_wait_timeout = 5;
     config.send_wait_timeout = 5;
     config.close_fn = http_close_cb;
+    config.open_fn = http_open_cb;
 
 
     ESP_LOGI(TAG, "Starting HTTP Server");
@@ -200,6 +207,18 @@ esp_err_t start_rest_server(void * pvParameters)
         .user_ctx = NULL
     };
     httpd_register_uri_handler(http_server, &system_restart_options_uri);
+
+    httpd_uri_t system_shutdown_uri = {
+        .uri = "/api/system/shutdown", .method = HTTP_POST, .handler = POST_shutdown, .user_ctx = rest_context};
+    httpd_register_uri_handler(http_server, &system_shutdown_uri);
+
+    httpd_uri_t system_shutdown_options_uri = {
+        .uri = "/api/system/shutdown",
+        .method = HTTP_OPTIONS,
+        .handler = handle_options_request,
+        .user_ctx = NULL
+    };
+    httpd_register_uri_handler(http_server, &system_shutdown_options_uri);
 
     httpd_uri_t update_system_settings_uri = {
         .uri = "/api/system", .method = HTTP_PATCH, .handler = PATCH_update_settings, .user_ctx = rest_context};

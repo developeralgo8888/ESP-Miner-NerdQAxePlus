@@ -25,6 +25,12 @@ NerdOctaxeGamma::NerdOctaxeGamma() : NerdQaxePlus2() {
     m_maxVin = 13.0;
     m_minVin = 11.0;
 
+     // use m_asicVoltage for init
+    m_initVoltageMillis = 0;
+
+    m_maxVin = 13.0;
+    m_minVin = 11.0;
+
 #ifdef NERDOCTAXEGAMMA
     m_theme = new ThemeNerdoctaxegamma();
 #endif
@@ -43,6 +49,7 @@ NerdOctaxeGamma::NerdOctaxeGamma() : NerdQaxePlus2() {
     vTaskDelay(pdMS_TO_TICKS(1));
 
     bool isTPS53667 = gpio_get_level(VR_DETECT_PIN);
+    m_isTPS53667 = isTPS53667;  // Save for later use in getVRTemp()
 
     if (isTPS53667) {
         // TPS53667 configuration: 6 phases, 240A capability
@@ -51,11 +58,20 @@ NerdOctaxeGamma::NerdOctaxeGamma() : NerdQaxePlus2() {
         m_ifault = 235.0;
         m_maxPin = 300.0;    // ~300W output Typically
         m_minPin = 30.0;
+        m_minCurrentA = 0.0f;
+        m_maxCurrentA = 25.0f;
         m_tps = new TPS53667();
 
         // Extended frequency range for TPS53667 (6 phases, higher power capacity)
-        m_asicFrequencies = {500, 525, 575, 590, 600, 625, 650, 675, 700};
+        m_asicFrequencies = {525, 550, 575, 600, 625, 650, 675, 700, 725, 750, 775, 800};
         m_absMaxAsicFrequency = 850;  // Absolute max for manual input (danger zone)
+
+        // Extended voltage range for TPS53667 (6 phases, higher current capacity)
+        m_asicVoltages = {1120, 1130, 1140, 1150, 1160, 1170, 1180, 1190, 1200, 1210, 1220, 1230, 1240, 1250, 1260};
+
+        // Set higher default values for 6-phase configuration
+        m_defaultAsicFrequency = m_asicFrequency = 700;
+        m_defaultAsicVoltageMillis = m_asicVoltageMillis = 1210;  // 1.21V
 
         ESP_LOGI(TAG, "TPS53667 voltage regulator detected (GPIO3=HIGH, 6 phases, 240A max with 24.9kΩ resistor)");
     } else {
@@ -63,12 +79,26 @@ NerdOctaxeGamma::NerdOctaxeGamma() : NerdQaxePlus2() {
         // Configure for 4-phase operation (uses inherited frequency limits)
         m_numPhases = 4;
         m_imax = 180;        // 33.2kΩ → 180A max (45A per phase with 4 phases)
-        m_ifault = 140.0;
+        m_ifault = 160.0;
         m_maxPin = 200.0;
         m_minPin = 100.0;
+        m_minCurrentA = 0.0f;
+        m_maxCurrentA = 20.0f;
         // m_asicFrequencies and m_absMaxAsicFrequency inherited from parent (500-600 MHz, max 800)
 
         ESP_LOGI(TAG, "TPS53647 voltage regulator detected (GPIO3=LOW, 4 phases, using inherited)");
     }
 
+}
+
+float NerdOctaxeGamma::getVRTemp() {
+    // Get temperature from parent implementation
+    float vrTemp = NerdQaxePlus::getVRTemp();
+
+    // Apply +8°C offset only for TPS53667 (6 phases) to correct sensor deviation
+    if (m_isTPS53667) {
+        vrTemp += 8.0f;
+    }
+
+    return vrTemp;
 }

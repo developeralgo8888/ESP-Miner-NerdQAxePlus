@@ -40,6 +40,7 @@ esp_err_t GET_system_info(httpd_req_t *req)
     // Parse optional start_timestamp parameter
     uint64_t start_timestamp = 0;
     uint64_t current_timestamp = 0;
+    uint32_t history_limit = 0;
     bool history_requested = false;
     char query_str[128];
     if (httpd_req_get_url_query_str(req, query_str, sizeof(query_str)) == ESP_OK) {
@@ -48,6 +49,12 @@ esp_err_t GET_system_info(httpd_req_t *req)
             start_timestamp = strtoull(param, NULL, 10);
             if (start_timestamp) {
                 history_requested = true;
+            }
+        }
+        if (httpd_query_key_value(query_str, "limit", param, sizeof(param)) == ESP_OK) {
+            history_limit = strtoul(param, NULL, 10);
+            if (history_limit > 1000) {
+                history_limit = 1000;
             }
         }
         if (httpd_query_key_value(query_str, "cur", param, sizeof(param)) == ESP_OK) {
@@ -61,6 +68,8 @@ esp_err_t GET_system_info(httpd_req_t *req)
 
     PSRAMAllocator allocator;
     JsonDocument doc(&allocator);
+
+    bool shutdown = POWER_MANAGEMENT_MODULE.isShutdown();
 
     // Get configuration strings from NVS
     char *ssid               = Config::getWifiSSID();
@@ -82,18 +91,21 @@ esp_err_t GET_system_info(httpd_req_t *req)
     doc["power"]              = POWER_MANAGEMENT_MODULE.getPower();
     doc["maxPower"]           = board->getMaxPin();
     doc["minPower"]           = board->getMinPin();
-    doc["voltage"]            = POWER_MANAGEMENT_MODULE.getVoltage();
     doc["maxVoltage"]         = board->getMaxVin();
     doc["minVoltage"]         = board->getMinVin();
-    doc["current"]            = POWER_MANAGEMENT_MODULE.getCurrent();
+    doc["current"]            = POWER_MANAGEMENT_MODULE.getCurrent();           // mA (raw)
+    doc["currentA"]           = POWER_MANAGEMENT_MODULE.getCurrent() / 1000.0f; // A (UI)
+    doc["minCurrentA"]        = board->getMinCurrentA(); // A
+    doc["maxCurrentA"]        = board->getMaxCurrentA(); // A
     doc["temp"]               = POWER_MANAGEMENT_MODULE.getChipTempMax();
     doc["vrTemp"]             = POWER_MANAGEMENT_MODULE.getVRTemp();
     doc["hashRateTimestamp"]  = history->getCurrentTimestamp();
-    doc["hashRate"]           = SYSTEM_MODULE.getCurrentHashrate();
-    doc["hashRate_1m"]        = history->getCurrentHashrate1m();
-    doc["hashRate_10m"]       = history->getCurrentHashrate10m();
-    doc["hashRate_1h"]        = history->getCurrentHashrate1h();
-    doc["hashRate_1d"]        = history->getCurrentHashrate1d();
+    // set hashrate values to 0 in shutdown
+    doc["hashRate"]           = !shutdown ? SYSTEM_MODULE.getCurrentHashrate() : 0.0;
+    doc["hashRate_1m"]        = !shutdown ? history->getCurrentHashrate1m()    : 0.0;
+    doc["hashRate_10m"]       = !shutdown ? history->getCurrentHashrate10m()   : 0.0;
+    doc["hashRate_1h"]        = !shutdown ? history->getCurrentHashrate1h()    : 0.0;
+    doc["hashRate_1d"]        = !shutdown ? history->getCurrentHashrate1d()    : 0.0;
     doc["coreVoltage"]        = board->getAsicVoltageMillis();
     doc["defaultCoreVoltage"] = board->getDefaultAsicVoltageMillis();
     doc["coreVoltageActual"]  = (int) (board->getVout() * 1000.0f);
@@ -127,12 +139,12 @@ esp_err_t GET_system_info(httpd_req_t *req)
     }
 
     // If history was requested, add the history data as a nested object
-    if (history_requested) {
+    if (!shutdown && history_requested) {
         uint64_t end_timestamp = start_timestamp + 3600 * 1000ULL; // 1 hour later
         JsonObject json_history = doc["history"].to<JsonObject>();
 
         History *history = SYSTEM_MODULE.getHistory();
-        history->exportHistoryData(json_history, start_timestamp, end_timestamp, current_timestamp);
+        history->exportHistoryData(json_history, start_timestamp, end_timestamp, current_timestamp, history_limit);
     }
 
     // settings
@@ -148,10 +160,12 @@ esp_err_t GET_system_info(httpd_req_t *req)
     doc["stratumPort"]        = Config::getStratumPortNumber();
     doc["stratumUser"]        = stratumUser;
     doc["stratumEnonceSubscribe"] = Config::isStratumEnonceSubscribe();
+    doc["stratumTLS"]         = Config::isStratumTLS();
     doc["fallbackStratumURL"] = fallbackStratumURL;
     doc["fallbackStratumPort"]= Config::getStratumFallbackPortNumber();
     doc["fallbackStratumUser"] = fallbackStratumUser;
     doc["fallbackStratumEnonceSubscribe"] = Config::isStratumFallbackEnonceSubscribe();
+    doc["fallbackStratumTLS"] = Config::isStratumFallbackTLS();
     doc["voltage"]            = POWER_MANAGEMENT_MODULE.getVoltage();
     doc["frequency"]          = board->getAsicFrequency();
     doc["defaultFrequency"]   = board->getDefaultAsicFrequency();

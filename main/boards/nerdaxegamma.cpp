@@ -48,6 +48,8 @@ NerdaxeGamma::NerdaxeGamma() : NerdAxe() {
     m_minPin = 5.0;
     m_maxVin = 5.5;
     m_minVin = 4.5;
+    m_minCurrentA = 0.0f;
+    m_maxCurrentA = 6.0f;
 
     m_asicMaxDifficulty = 2048;
     m_asicMinDifficulty = 512;
@@ -99,6 +101,8 @@ bool NerdaxeGamma::initBoard()
 
 void NerdaxeGamma::shutdown() {
     setVoltage(0.0);
+
+    Board::shutdown();
 }
 
 bool NerdaxeGamma::initAsics() {
@@ -186,7 +190,12 @@ float NerdaxeGamma::getVin() {
 }
 
 float NerdaxeGamma::getIin() {
-    return TPS546_get_iout();
+    float vin = getVin();
+    if (!vin) {
+        return 0.0f;
+    }
+
+    return getPin() / vin;
 }
 
 float NerdaxeGamma::getPin() {

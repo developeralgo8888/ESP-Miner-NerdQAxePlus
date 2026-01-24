@@ -37,7 +37,17 @@
             </nb-card-body>
         </nb-card>
         <nb-card>
-            <nb-card-header>{{ 'SETTINGS.STRATUM' | translate }}</nb-card-header>
+            <nb-card-header>
+            <div class="d-flex align-items-center justify-content-between">
+                <div>{{ 'SETTINGS.STRATUM' | translate }}</div>
+
+                <button nbButton ghost size="small" type="button"
+                        (click)="swapPools()"
+                        nbTooltip="{{ 'SETTINGS.SWAP_POOLS' | translate }}">
+                <nb-icon icon="swap-outline" pack="eva"></nb-icon>
+                </button>
+            </div>
+            </nb-card-header>
             <nb-card-body>
 
                 <div class="form-row">
@@ -117,6 +127,9 @@
                             </div>
                         </div>
                         <div class="form-row">
+                            <nb-checkbox formControlName="stratumTLS">{{ 'MINING.STRATUM_TLS' | translate}}</nb-checkbox>
+                        </div>
+                        <div class="form-row">
                             <nb-checkbox formControlName="stratumEnonceSubscribe">{{ 'MINING.ENABLE_EXTRANONCE' |
                                 translate
                                 }}</nb-checkbox>
@@ -165,6 +178,9 @@
                                         pack="eva"></nb-icon>
                                 </button>
                             </div>
+                        </div>
+                        <div class="form-row">
+                            <nb-checkbox formControlName="fallbackStratumTLS">{{ 'MINING.STRATUM_TLS' | translate}}</nb-checkbox>
                         </div>
                         <div class="form-row">
                             <nb-checkbox formControlName="fallbackStratumEnonceSubscribe">{{ 'MINING.ENABLE_EXTRANONCE'
@@ -350,6 +366,9 @@
             <nb-card-header>{{ 'MISC.TITLE' | translate }}</nb-card-header>
             <nb-card-body>
                 <div class="form-row">
+                  <nb-checkbox formControlName="experimentalDashboardEnabled">Use EXPERIMENTAL Dashboard</nb-checkbox>
+                </div>
+                <div class="form-row">
                     <nb-checkbox formControlName="flipscreen">{{ 'MISC.FLIP_SCREEN' | translate }}</nb-checkbox>
                 </div>
                 <div class="form-row">
@@ -375,7 +394,7 @@
                     </button>
                 </div>
             </div>
-            <div><button nbButton size="small" (click)="restart()" nbTooltip="'asdf'" status="danger">{{
+            <div><button nbButton size="small" (click)="restart()" status="danger">{{
                     'SYSTEM.RESTART' | translate }}</button>
             </div>
 

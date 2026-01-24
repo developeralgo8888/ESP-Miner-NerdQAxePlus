@@ -46,7 +46,7 @@
 
         <!-- Shares Card -->
         <!-- Shares Card -->
-        <div class="col-12 col-lg-6 col-xl-3 ps-lg-1">
+        <div class="col-12 col-lg-6 col-xl-3">
           <nb-card class="h-100">
             <nb-card-header style="position: relative;">
               <div class="d-flex justify-content-between align-items-center">
@@ -105,7 +105,7 @@
 
 
         <!-- Efficiency Card -->
-        <div class="col-12 col-lg-6 col-xl-3 ps-lg-1">
+        <div class="col-12 col-lg-6 col-xl-3">
           <nb-card class="h-100">
             <nb-card-header>
               <span class="text-hint">{{ 'HOME.EFFICIENCY' | translate }}</span>
@@ -128,7 +128,7 @@
         </div>
 
         <!-- Best Difficulty Card -->
-        <div class="col-12 col-lg-6 col-xl-3 ps-lg-1">
+        <div class="col-12 col-lg-6 col-xl-3">
           <nb-card class="h-100">
             <nb-card-header>
               <span class="text-hint">{{ 'HOME.BEST_DIFF' | translate }}</span>
@@ -163,7 +163,9 @@
         <div class="col-12">
           <nb-card>
             <nb-card-header>
-              <span class="text-hint">{{ 'HOME.HASH_RATE_CHART' | translate }}</span>
+              <div class="chart-header-row">
+                <span class="text-hint">{{ 'HOME.HASH_RATE_CHART' | translate }}</span>
+              </div>
             </nb-card-header>
             <nb-card-body>
               <canvas #myChart width="400" height="400"></canvas>
@@ -177,21 +179,53 @@
         <div class="col-12 col-lg-4">
           <nb-card class="h-100">
             <nb-card-header>
-              <span class="text-hint">{{ 'PERFORMANCE.POWER' | translate }}</span>
+              <span class="text-hint">{{ 'PERFORMANCE.TITLE_POWER_USAGE' | translate }}</span>
             </nb-card-header>
             <nb-card-body class="no-scroll">
               <div class="row text-center">
-                <div class="col-4">
-                  <app-gauge [value]="info.power" [min]="info.minPower" [max]="info.maxPower" [unit]="'W'"
-                    [label]="'PERFORMANCE.POWER' | translate" [format]="'1.1-1'"></app-gauge>
+                <!-- Power -->
+                <div class="col-6">
+                  <app-gauge
+                    [value]="info.power"
+                    [min]="info.minPower"
+                    [max]="info.maxPower"
+                    [unit]="'W'"
+                    [label]="'PERFORMANCE.POWER' | translate"
+                    [format]="'1.1-1'">
+                  </app-gauge>
                 </div>
-                <div class="col-4">
-                  <app-gauge [value]="info.voltage" [format]="'1.1-1'" [min]="info.minVoltage" [max]="info.maxVoltage"
-                    [unit]="'V'" [label]="'PERFORMANCE.INPUT_VOLTAGE' | translate"></app-gauge>
+                <div class="col-6">
+                  <app-gauge
+                    [value]="info.currentA"
+                    [min]="info.minCurrentA ?? 0"
+                    [max]="info.maxCurrentA ?? 6"
+                    [warn]="(info.maxCurrentA ?? 6) * 0.94"
+                    [crit]="(info.maxCurrentA ?? 6) * 0.99"
+                    [unit]="'A'"
+                    [label]="'PERFORMANCE.INPUT_CURRENT' | translate"
+                    [format]="'1.2-2'">
+                  </app-gauge>
                 </div>
-                <div class="col-4">
-                  <app-gauge [value]="info.coreVoltage" [min]="0.9" [max]="1.8" [unit]="'V'"
-                    [label]="'PERFORMANCE.ASIC_VOLTAGE' | translate"></app-gauge>
+                <!-- ASIC Voltage -->
+                <div class="col-6">
+                  <app-gauge
+                    [value]="info.coreVoltage"
+                    [min]="0.9"
+                    [max]="1.8"
+                    [unit]="'V'"
+                    [label]="'PERFORMANCE.ASIC_VOLTAGE' | translate">
+                  </app-gauge>
+                </div>
+                <!-- Input Voltage -->
+                <div class="col-6">
+                  <app-gauge
+                    [value]="info.voltage"
+                    [format]="'1.1-1'"
+                    [min]="info.minVoltage"
+                    [max]="info.maxVoltage"
+                    [unit]="'V'"
+                    [label]="'PERFORMANCE.INPUT_VOLTAGE' | translate">
+                  </app-gauge>
                 </div>
               </div>
             </nb-card-body>
@@ -277,7 +311,16 @@
           @let usingFallback = info.stratum?.usingFallback;
 
           <nb-card class="h-100">
-            <nb-card-header>
+            <nb-card-header class="pool-header">
+              <a [href]="getQuickLink(poolInfo.host, poolInfo.user)" target="_blank">
+                <img
+                  [src]="poolIconUrl(poolInfo.host)"
+                  class="pool-header__icon"
+                  alt="Pool icon"
+                  (error)="onPoolIconError($event, poolInfo.host)"
+                />
+              </a>
+
               <span *ngIf="!isDualPool" class="text-hint">
                 {{ 'POOL_INFO.TITLE' | translate }}
                 (
@@ -339,7 +382,7 @@
                     <span class="text-hint">{{ 'POOL_INFO.PING' | translate }}:</span>
                   </div>
                   <div class="col">
-                    {{ poolInfo.pingRtt !== undefined && poolInfo.pingRtt !== null
+                    {{ supportsPing(poolInfo.host) && poolInfo.pingRtt !== undefined && poolInfo.pingRtt !== null
                     ? (poolInfo.pingRtt.toFixed(2) + ' ' + ('PERFORMANCE.MS' | translate)
                     + ' (' + ('PERFORMANCE.AVG' | translate) + ')')
                     : 'n/a' }}
@@ -352,7 +395,7 @@
                     <span class="text-hint">{{ 'POOL_INFO.LOSS' | translate }}:</span>
                   </div>
                   <div class="col">
-                    {{ poolInfo.pingLoss !== undefined && poolInfo.pingLoss !== null
+                    {{ supportsPing(poolInfo.host) && poolInfo.pingLoss !== undefined && poolInfo.pingLoss !== null
                     ? (poolInfo.pingLoss * 100).toFixed(2) + ' %'
                     : 'n/a' }}
                   </div>

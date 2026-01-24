@@ -1,5 +1,5 @@
 import { Component, AfterViewChecked, OnInit, OnDestroy } from '@angular/core';
-import { interval, map, Observable, shareReplay, startWith, switchMap, tap } from 'rxjs';
+import { interval, map, Observable, shareReplay, startWith, switchMap, tap, Subscription, take, exhaustMap } from 'rxjs';
 import { HashSuffixPipe } from '../../pipes/hash-suffix.pipe';
 import { SystemService } from '../../services/system.service';
 import { ISystemInfo } from '../../models/ISystemInfo';
@@ -11,6 +11,14 @@ import { NbTrigger } from '@nebular/theme';
 import { TranslateService } from '@ngx-translate/core';
 import { LocalStorageService } from '../../services/local-storage.service';
 import { IPool } from 'src/app/models/IStratum';
+import {
+  getPoolIconUrl as resolvePoolIconUrl,
+  getQuickLink,
+  supportsPing,
+  isLocalHost,
+  DEFAULT_POOL_ICON_URL,
+  DEFAULT_EXTERNAL_POOL_ICON_URL,
+} from './home.quicklinks';
 
 @Component({
   selector: 'app-home',
@@ -43,6 +51,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
   public dataData10m: number[] = [];
   public dataData1h: number[] = [];
   public dataData1d: number[] = [];
+  public dataVregTemp: number[] = [];
+  public dataAsicTemp: number[] = [];
   public chartData?: any;
 
   public hasChipTemps: boolean = false;
@@ -111,6 +121,7 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
           type: 'line',
           label: this.translateService.instant('HOME.HASHRATE_1M'),
           data: this.dataData1m,
+          yAxisID: 'y',
           fill: false,
           backgroundColor: '#6484f6',
           borderColor: '#6484f6',
@@ -122,6 +133,7 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
           type: 'line',
           label: this.translateService.instant('HOME.HASHRATE_10M'),
           data: this.dataData10m,
+          yAxisID: 'y',
           fill: false,
           backgroundColor: '#7464f6',
           borderColor: '#7464f6',
@@ -133,6 +145,7 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
           type: 'line',
           label: this.translateService.instant('HOME.HASHRATE_1H'),
           data: this.dataData1h,
+          yAxisID: 'y',
           fill: false,
           backgroundColor: '#a564f6',
           borderColor: '#a564f6',
@@ -144,6 +157,7 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
           type: 'line',
           label: this.translateService.instant('HOME.HASHRATE_1D'),
           data: this.dataData1d,
+          yAxisID: 'y',
           fill: false,
           backgroundColor: '#c764f6',
           borderColor: '#c764f6',
@@ -151,6 +165,28 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
           pointRadius: 0,
           borderWidth: 1
         },
+        {
+          type: 'line',
+          label: this.translateService.instant('PERFORMANCE.VR_TEMP'),
+          data: this.dataVregTemp,
+          yAxisID: 'y_temp',
+          borderColor: '#ff8a65',
+          backgroundColor: '#ff8a65',
+          tension: .4,
+          pointRadius: 0,
+          borderWidth: 1
+        },
+        {
+          type: 'line',
+          label: this.translateService.instant('PERFORMANCE.ASIC_TEMP'),
+          data: this.dataAsicTemp,
+          yAxisID: 'y_temp',
+          borderColor: '#f06292',
+          backgroundColor: '#f06292',
+          tension: .4,
+          pointRadius: 0,
+          borderWidth: 1
+        }
       ]
     };
 
@@ -216,6 +252,19 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
             callback: (value: number) => HashSuffixPipe.transform(value)
           },
           grid: {
+            display: false,
+            drawBorder: false
+          }
+        },
+        y_temp: {
+          position: "right",
+          min: 20,
+          max: 80,
+          ticks: {
+            color: textColorSecondary,
+            callback: (value: number) => `${value.toFixed(2)} °C`
+          },
+          grid: {
             color: '#80808080',//surfaceBorder,
             drawBorder: false
           }
@@ -225,7 +274,7 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
 
     this.info$ = interval(5000).pipe(
       startWith(0), // Immediately start the interval observable
-      switchMap(() => {
+      exhaustMap(() => {
         const storedLastTimestamp = this.getStoredTimestamp();
         const currentTimestamp = new Date().getTime();
         const oneHourAgo = currentTimestamp - 3600 * 1000;
@@ -295,31 +344,94 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
     );
   }
 
+  /**
+   * Returns a pool-specific dashboard / stats URL for the given stratum endpoint.
+   *
+   * The function delegates to the shared quicklink helper which:
+   * - normalizes the stratum URL (supports stratum+tcp://, host:port, host)
+   * - extracts the wallet / address from the stratum user
+   * - maps known pools to their corresponding web dashboards
+   *
+   * If no known pool matches, a normalized URL representation of the stratum
+   * endpoint is returned as a fallback.
+   *
+   * @param stratumURL  Stratum pool URL or host
+   * @param stratumUser Stratum user string (wallet[.worker])
+   * @returns A pool-specific dashboard URL or `undefined` if input is empty
+   */
   public getQuickLink(stratumURL: string, stratumUser: string): string | undefined {
-    const address = stratumUser.split('.')[0];
+    return getQuickLink(stratumURL, stratumUser);
+  }
 
-    if (stratumURL.includes('public-pool.io')) {
-      return `https://web.public-pool.io/#/app/${address}`;
-    } else if (stratumURL.includes('ocean.xyz')) {
-      return `https://ocean.xyz/stats/${address}`;
-    } else if (stratumURL.includes('solo.d-central.tech')) {
-      return `https://solo.d-central.tech/#/app/${address}`;
-    } else if (/^eusolo[46]?.ckpool.org/.test(stratumURL)) {
-      return `https://eusolostats.ckpool.org/users/${address}`;
-    } else if (/^solo[46]?.ckpool.org/.test(stratumURL)) {
-      return `https://solostats.ckpool.org/users/${address}`;
-    } else if (stratumURL.includes('pool.noderunners.network')) {
-      return `https://noderunners.network/en/pool/user/${address}`;
-    } else if (stratumURL.includes('satoshiradio.nl')) {
-      return `https://pool.satoshiradio.nl/user/${address}`;
-    } else if (stratumURL.includes('solohash.co.uk')) {
-      return `https://solohash.co.uk/user/${address}`;
-    } else if (stratumURL.includes('parasite.wtf')) {
-      return `https://parasite.space/user/${address}`;
-    } else if (stratumURL.includes('solomining.de')) {
-      return `https://pool.solomining.de/#/app/${address}`;
+  /**
+   * Indicates whether the given stratum pool supports ICMP ping.
+   *
+   * Some pools intentionally block or ignore ping requests.
+   * This helper centralizes pool-specific exceptions.
+   *
+   * @param stratumURL Stratum pool URL or host
+   * @returns `true` if ping is supported, otherwise `false`
+   */
+  public supportsPing(stratumURL: string): boolean {
+    return supportsPing(stratumURL);
+  }
+
+  private readonly poolIconErrorCache = new Set<string>();
+
+  /**
+   * Resolves the icon URL for a given pool host.
+   *
+   * Logic:
+   * - Uses the existing pool registry / quicklink resolution via `getPoolIconUrl`
+   * - If the pool host previously failed to load an icon (favicon or registry icon),
+   *   the default pool icon is returned immediately
+   * - This guarantees a valid icon for:
+   *   - local pools
+   *   - registered pools
+   *   - unknown public pools
+   *
+   * @param host Pool hostname
+   * @returns URL to the pool icon or the default pool icon
+   */
+  public poolIconUrl(host: string | undefined | null): string {
+    const key = (host ?? '').trim().toLowerCase();
+    if (!key) return DEFAULT_POOL_ICON_URL;
+
+    if (this.poolIconErrorCache.has(key)) {
+      return isLocalHost(key) ? DEFAULT_POOL_ICON_URL : DEFAULT_EXTERNAL_POOL_ICON_URL;
     }
-    return stratumURL.startsWith('http') ? stratumURL : `http://${stratumURL}`;
+
+    return resolvePoolIconUrl(key);
+  }
+
+  /**
+   * Handles icon load errors for pool icons.
+   *
+   * When a favicon or registry-provided icon cannot be loaded (e.g. 404, CORS),
+   * this method:
+   * - stores the host in an internal error cache
+   * - replaces the broken image with the default pool icon
+   * - prevents repeated failing network requests for the same pool
+   *
+   * This ensures graceful fallback behavior for unknown public pools.
+   *
+   * @param evt Image error event
+   * @param host Pool hostname associated with the icon
+   */
+  public onPoolIconError(evt: Event, host: string | undefined | null): void {
+    const key = (host ?? '').trim().toLowerCase();
+    if (key) this.poolIconErrorCache.add(key);
+
+    const img = evt.target as HTMLImageElement | null;
+    if (!img) return;
+
+    const fallback = isLocalHost(key)
+      ? DEFAULT_POOL_ICON_URL
+      : DEFAULT_EXTERNAL_POOL_ICON_URL;
+
+    if (img.src.includes(fallback)) return;
+
+    img.src = fallback;
   }
 
   ngOnInit() {
@@ -388,6 +500,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
     this.dataData10m = [];
     this.dataData1h = [];
     this.dataData1d = [];
+    this.dataVregTemp = [];
+    this.dataAsicTemp = [];
   }
 
   private updateChartData(data: any): void {
@@ -397,6 +511,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
     const convertedhashrate_10m = data.hashrate_10m.map((hr: number) => hr * 1000000000.0 / 100.0);
     const convertedhashrate_1h = data.hashrate_1h.map((hr: number) => hr * 1000000000.0 / 100.0);
     const convertedhashrate_1d = data.hashrate_1d.map((hr: number) => hr * 1000000000.0 / 100.0);
+    const convertedVregTemp = data.vregTemp.map((temp: number) => temp / 100.0);
+    const convertedAsicTemp = data.asicTemp.map((temp: number) => temp / 100.0);
 
     // Find the highest existing timestamp
     const lastTimestamp = this.dataLabel.length > 0 ? Math.max(...this.dataLabel) : -Infinity;
@@ -408,6 +524,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
       hashrate_10m: convertedhashrate_10m[index],
       hashrate_1h: convertedhashrate_1h[index],
       hashrate_1d: convertedhashrate_1d[index],
+      vregTemp: convertedVregTemp[index],
+      asicTemp: convertedAsicTemp[index],
     })).filter(entry => entry.timestamp > lastTimestamp);
 
     // Append only new data
@@ -417,6 +535,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
       this.dataData10m = [...this.dataData10m, ...newData.map(entry => entry.hashrate_10m)];
       this.dataData1h = [...this.dataData1h, ...newData.map(entry => entry.hashrate_1h)];
       this.dataData1d = [...this.dataData1d, ...newData.map(entry => entry.hashrate_1d)];
+      this.dataVregTemp = [...this.dataVregTemp, ...newData.map(entry => entry.vregTemp)];
+      this.dataAsicTemp = [...this.dataAsicTemp, ...newData.map(entry => entry.asicTemp)];
     }
   }
 
@@ -429,6 +549,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
       this.dataData10m = parsedData.dataData10m || [];
       this.dataData1h = parsedData.dataData1h || [];
       this.dataData1d = parsedData.dataData1d || [];
+      this.dataVregTemp = parsedData.dataVregTemp || [];
+      this.dataAsicTemp = parsedData.dataAsicTemp || [];
     }
 
     // do a simple consistency check
@@ -450,6 +572,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
       dataData10m: this.dataData10m,
       dataData1h: this.dataData1h,
       dataData1d: this.dataData1d,
+      dataVregTemp: this.dataVregTemp,
+      dataAsicTemp: this.dataAsicTemp,
     };
     localStorage.setItem(this.localStorageKey, JSON.stringify(dataToSave));
   }
@@ -464,6 +588,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
       this.dataData10m.shift();
       this.dataData1h.shift();
       this.dataData1d.shift();
+      this.dataVregTemp.shift();
+      this.dataAsicTemp.shift();
     }
 
     if (this.dataLabel.length) {
@@ -493,6 +619,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
     this.chartData.datasets[1].data = this.dataData10m;
     this.chartData.datasets[2].data = this.dataData1h;
     this.chartData.datasets[3].data = this.dataData1d;
+    this.chartData.datasets[4].data = this.dataVregTemp;
+    this.chartData.datasets[5].data = this.dataAsicTemp;
 
     if (!this.chart) {
       return;
@@ -514,6 +642,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
     this.chartOptions.scales.x.grid.color = '#80808080';
     this.chartOptions.scales.y.ticks.color = textColor;
     this.chartOptions.scales.y.grid.color = '#80808080';
+    this.chartOptions.scales.y_temp.ticks.color = textColor;
+    this.chartOptions.scales.y_temp.grid.color = '#80808080';
 
     // Update and redraw the chart
     if (this.chart) {
@@ -679,8 +809,10 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
     const len10m = this.dataData10m.length;
     const len1h = this.dataData1h.length;
     const len1d = this.dataData1d.length;
+    const lenVregTemp = this.dataVregTemp.length;
+    const lenAsicTemp = this.dataAsicTemp.length;
 
-    const lengths = [lenLabels, len1m, len10m, len1h, len1d];
+    const lengths = [lenLabels, len1m, len10m, len1h, len1d, lenVregTemp, lenAsicTemp];
 
     // if all arrays have the same length everything is fine
     const allEqual = lengths.every(l => l === lengths[0]);
@@ -690,7 +822,7 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
 
     // if not we clear the data and trigger a reload
     console.warn('[History] Inconsistent lengths detected from', {
-      lenLabels, len1m, len10m, len1h, len1d,
+      lenLabels, len1m, len10m, len1h, len1d, lenVregTemp, lenAsicTemp
     });
 
     // Clear in-memory history arrays
@@ -699,6 +831,8 @@ export class HomeComponent implements AfterViewChecked, OnInit, OnDestroy {
     this.dataData10m = [];
     this.dataData1h = [];
     this.dataData1d = [];
+    this.dataVregTemp = [];
+    this.dataAsicTemp = [];
 
     // prevent saving anything after we clear and reload the window
     this.saveLock = true;

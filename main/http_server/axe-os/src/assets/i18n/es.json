@@ -36,7 +36,7 @@
   "HOME": {
     "HASH_RATE": "Tasa de Hash",
     "HASH_RATE_TOOLTIP": "Tasa de hash reportada por los ASICs.",
-    "HASH_RATE_CHART": "Gráfico de Tasa de Hash",
+    "HASH_RATE_CHART": "Nerd* Gráfico",
     "HASHRATE_ESTIMATED": "Tasa de hash estimada por las acciones encontradas.",
     "SHARES": "Acciones",
     "POWER": "Potencia",
@@ -60,15 +60,17 @@
     "IDLE": "Inactivo",
     "PRIMARY_POOL": "Pool Primario",
     "FALLBACK_POOL": "Pool de Respaldo",
-    "HASHRATE_1M": "Hashrate (1 min)",
-    "HASHRATE_10M": "Hashrate (10 min)",
-    "HASHRATE_1H": "Hashrate (1 h)",
-    "HASHRATE_1D": "Hashrate (1 d)",
+    "HASHRATE_1M": "Hashrate  (1 min)",
+    "HASHRATE_10M": " (10 min)",
+    "HASHRATE_1H": " (1 hora)",
+    "HASHRATE_1D": " (1 día)",
     "SHARE_TOO_SMALL": "Porcentaje para este pool demasiado bajo!"
   },
   "PERFORMANCE": {
     "TITLE": "Rendimiento",
+    "TITLE_POWER_USAGE": "Consumo de energía",
     "POWER": "Potencia",
+    "INPUT_CURRENT": "Corriente de Entrada",
     "INPUT_VOLTAGE": "Voltaje de Entrada",
     "ASIC_VOLTAGE": "Voltaje ASIC",
     "ASIC_VOLTAGE_MEASURED": "Voltaje ASIC Medido",
@@ -76,6 +78,8 @@
     "TITLE_HEAT": "Calor",
     "ASIC_TEMP": "Temp ASIC",
     "VR_TEMP": "Temp VR",
+    "ASIC_TEMP_LEGEND": "ASIC",
+    "VR_TEMP_LEGEND": "VReg.",
     "FAN_SPEED": "Velocidad Ventilador",
     "FAN_RPM": "RPM Ventilador",
     "ASIC_FREQUENCY": "Frecuencia ASIC",
@@ -135,7 +139,8 @@
     "POOL_MODE_DUAL": "Pool dual",
     "POOL_BALANCE": "Balance de pool",
     "POOL_BALANCE_HINT": "Distribuye trabajos entre el pool primario y el secundario, p. ej., 70/30.",
-    "STRATUM": "Configuración de Stratum"
+    "STRATUM": "Configuración de Stratum",
+    "SWAP_POOLS": "Intercambiar pools"
   },
   "SYSTEM": {
     "TITLE": "Información del Sistema",
@@ -194,7 +199,11 @@
     "RESET_SDIO": "Reinicio SDIO",
     "RESET_NOT_SPECIFIED": "No especificado",
     "ABOUT_NERDQX": " proyecto fue desarrollado por un equipo internacional de entusiastas y lanzado como hardware abierto. NerdQX pertenece a la iniciativa <strong>«ORIGINAL»</strong>, que permite a los usuarios averiguar si su NerdQX es original. Más información al respecto",
-    "ABOUT_NERDQX_ORIGINAL": " <u>aquí</u>"
+    "ABOUT_NERDQX_ORIGINAL": " <u>aquí</u>",
+    "SHUTDOWN": "Apagar",
+    "SHUTDOWN_SUCCESS": "El sistema se está apagando",
+    "SHUTDOWN_FAILED": "Error al apagar el sistema",
+    "LOGS_ALREADY_OPEN_OTHER_TAB": "Los registros ya están abiertos en otra pestaña."
   },
   "SWARM": {
     "TITLE": "Gestión de Enjambre",
@@ -261,6 +270,11 @@
     "SETTINGS_SAVE_FAILED": "No se pudo guardar la configuración de alertas.",
     "TEST_ALERT_SENT": "Alerta de prueba enviada a Discord.",
     "TEST_ALERT_FAILED": "Error al enviar alerta de prueba."
+  },
+  "DISPLAY": {
+    "TITLE": "Pantalla",
+    "BLOCK_FOUND_SCREEN": "Mostrar pantalla de 'Bloque encontrado'",
+    "BLOCK_FOUND_SCREEN_DESC": "Muestra una notificación en la pantalla del minero cuando se encuentra un bloque."
   },
   "ERRORS": {
     "NETWORK_ERROR": "Error de red ocurrido",
@@ -369,7 +383,8 @@
     "SETTINGS": "Configuración de Minería",
     "STRATUM_DIFFICULTY": "Dificultad Stratum Sugerida",
     "STRATUM_DIFFICULTY_HELP": "Dificultad Stratum inicial sugerida",
-    "ENABLE_EXTRANONCE": "Habilitar Suscripción Extranonce"
+    "ENABLE_EXTRANONCE": "Habilitar Suscripción Extranonce",
+    "STRATUM_TLS": "Conexión cifrada (TLS)"
   },
   "FAN": {
     "TITLE": "Controlador de Ventilador",
@@ -399,17 +414,19 @@
     "PROCEED_ANYWAY": "Continuar de Todos Modos"
   },
   "DISCORD": {
-    "TITLE": "Alertas Discord",
-    "ALERTS": "Alertas Discord",
-    "WEBHOOK": "Webhook Discord",
-    "WEBHOOK_URL": "URL Webhook",
-    "WEBHOOK_HELP": "Webhook de la integración de su canal Discord",
-    "CONFIGURE_DESCRIPTION": "Configure qué alertas de Discord desea recibir. El webhook se usa para todos los temas seleccionados.",
-    "MINER_WATCHDOG": "Vigilancia del minero activada",
-    "MINER_WATCHDOG_DESC": "se activa si el dispositivo se reinicia después de fallar al enviar una acción durante 1 hora",
+    "TITLE": "Alertas de Discord",
+    "ALERTS": "Alertas de Discord",
+    "WEBHOOK": "Webhook de Discord",
+    "WEBHOOK_URL": "URL del webhook",
+    "WEBHOOK_HELP": "Webhook de la integración del canal de Discord",
+    "CONFIGURE_DESCRIPTION": "Configura qué alertas de Discord deseas recibir. El webhook se utiliza para todos los temas seleccionados.",
+    "MINER_WATCHDOG": "Watchdog del minero activado",
+    "MINER_WATCHDOG_DESC": "se activa cuando el dispositivo se reinicia tras no enviar ningún share durante 1 hora",
     "BLOCK_FOUND": "Bloque encontrado",
-    "BLOCK_FOUND_DESC": "se activa cuando su minero encuentra un bloque",
-    "TEST": "Prueba"
+    "BLOCK_FOUND_DESC": "se activa cuando tu minero encuentra un bloque",
+    "TEST": "Prueba",
+    "BEST_DIFF_FOUND": "Mejor dificultad encontrada",
+    "BEST_DIFF_FOUND_DESC": "se activa cuando el dispositivo encuentra una nueva mejor dificultad"
   },
   "LANGUAGE": {
     "TITLE": "Idioma / Language",
